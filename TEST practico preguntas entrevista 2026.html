@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario CESFAM Dalcahue 2025</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eef2f3; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        h1 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .category-select { margin-bottom: 20px; }
+        select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #bdc3c7; font-size: 16px; background: #f9f9f9; }
+        .stats-banner { background: #3498db; color: white; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; font-weight: bold; }
+        .question-card { border: 2px solid #3498db; border-radius: 12px; padding: 20px; min-height: 200px; position: relative; background: #fff; }
+        .question-text { font-size: 1.2em; font-weight: bold; color: #2c3e50; margin-bottom: 20px; }
+        .answer-area { margin-top: 15px; }
+        .answer-box { background: #f1f1f1; border: 2px dashed #95a5a6; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .answer-box:hover { background: #e8e8e8; border-color: #3498db; }
+        .answer-content { display: none; text-align: left; line-height: 1.6; color: #27ae60; font-weight: 500; }
+        .btn { display: block; width: 100%; padding: 12px; margin-top: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-next { background: #27ae60; color: white; }
+        .btn-next:hover { background: #219150; }
+        .hidden { display: none; }
+        .citation { font-size: 0.8em; color: #7f8c8d; display: block; margin-top: 10px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Entrevistas CESFAM Dalcahue 2025</h1>
+    
+    <div class="category-select">
+        <label for="cat"><strong>Seleccione su Categoría:</strong></label>
+        <select id="cat" onchange="loadCategory()">
+            <option value="">-- Seleccionar --</option>
+            <option value="medicos">1. Médicos Cirujanos (11 preguntas)</option>
+            <option value="clinico_func">2. Cualquier funcionario clínico (7 preguntas)</option>
+            <option value="cualquier_func">3. Cualquier funcionario (18 preguntas)</option>
+            <option value="prof_admin">4. Cualquier profesional y funcionario administrativo (15 preguntas)</option>
+            <option value="some">5. Funcionario administrativo SOME/OIRS (11 preguntas)</option>
+            <option value="prof_clinico">6. Cualquier profesional clínico (3 preguntas)</option>
+        </select>
+    </div>
+
+    <div id="quiz-section" class="hidden">
+        <div id="stats" class="stats-banner"></div>
+        <div class="question-card">
+            <div id="q-text" class="question-text"></div>
+            <div class="answer-area">
+                <div id="placeholder" class="answer-box" onclick="showAnswer()">
+                    <span style="font-size: 2em;">❓</span><br>Haga clic para ver la respuesta
+                </div>
+                <div id="ans-text" class="answer-content"></div>
+            </div>
+            <button id="next-btn" class="btn btn-next hidden" onclick="nextQuestion()">Siguiente Pregunta</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const db = {
+    medicos: [
+        {q: "¿Se pueden realizar estudios clínicos en la Red APS Dalcahue?", a: "Si. [cite: 1]"},
+        {q: "¿Quién debe autorizar la realización de un proyecto de investigación en el CESFAM?", a: "Dirección del CESFAM. [cite: 1]"},
+        {q: "¿A qué comité se debe pedir autorización para realizar investigaciones en seres humanos?", a: "Al Comité Ético Científico del Servicio de Salud Los Ríos. [cite: 1]"},
+        {q: "¿Qué proyectos de investigación se deben presentar a este comité de ética?", a: "Toda investigación que involucre la participación de la población inscrita o utilización de información sensible de ella. [cite: 1]"},
+        {q: "¿Quiénes pueden realizar investigaciones científicas biomédicas en la Red APS Dalcahue?", a: "Cualquier profesional o técnico. [cite: 1]"},
+        {q: "¿Cuál es el procedimiento para realizar una investigación en seres humanos en el CESFAM?", a: "1. Presentar proyecto a Dirección vía anexo N° 1. 2. Recepción de resultado por correo. 3. Presentar al comité de ética (formato físico y digital). 4. Emitir certificado y remitir a Dirección. [cite: 1]"},
+        {q: "¿A qué comité de ética asistencial están adscritos los establecimientos?", a: "Al Comité Ético Asistencial del Servicio de Salud Chiloé. [cite: 4]"},
+        {q: "¿Cuándo consultar al comité de ética asistencial?", a: "Duda sobre competencia de la persona, decisiones que expongan a graves daños/muerte, o posible alta forzosa. [cite: 4]"},
+        {q: "¿Quiénes pueden acceder al comité de ética?", a: "Usuarios y profesionales. [cite: 4]"},
+        {q: "¿Un usuario requiere autorización de Dirección para acceder al comité de ética?", a: "No. Solo debe completar el formulario y entregarlo. [cite: 4]"},
+        {q: "¿Qué debe hacer un profesional para presentar un caso al comité de ética?", a: "Completar anexo N° 1, entregar a secretaría, análisis por Dirección/Calidad y envío por ordinario. [cite: 4]"}
+    ],
+    clinico_func: [
+        {q: "¿Qué hacer en caso de accidente con fluido de alto riesgo?", a: "Lavar con agua y jabón (mucosas solo agua), avisar a jefatura, cambiar ropa si hay derrame e identificar fuente. "},
+        {q: "¿Qué documentos completa la jefatura tras el accidente?", a: "1. Formulario de investigación de la fuente para OAL. 2. Formulario interno de registro. "},
+        {q: "¿En cuánto tiempo debe ser trasladado el funcionario al OAL?", a: "Dentro de las 2 primeras horas. "},
+        {q: "¿Cuándo finaliza el procedimiento del accidente?", a: "Al recibir alta de la mutualidad y presentar documento a jefatura. "},
+        {q: "¿Qué pasa si el funcionario se rehúsa a ser derivado?", a: "Debe firmar consentimiento informado para rechazo de prestaciones médicas. "},
+        {q: "¿Medidas generales para evitar accidentes con objetos contaminados?", a: "No recapsular agujas, no desmontar con las manos, no pasar cortopunzantes mano a mano y usar precauciones estándar. "},
+        {q: "¿Proceder en accidente de alumno en práctica?", a: "Informar a docente guía para derivación según su seguro escolar. "}
+    ],
+    cualquier_func: [
+        {q: "¿En qué situación se activa el código azul?", a: "Emergencia vital: no responde a estímulos, no respira o no tiene pulso. [cite: 10]"},
+        {q: "¿Qué anexo digitar en espacios con citófono?", a: "Anexo 100. [cite: 10]"},
+        {q: "¿Qué hacer si NO hay citófono?", a: "Gritar a viva voz y llamar al celular SUR/SAPU 652331676. [cite: 10]"},
+        {q: "¿Qué decir para activar el código?", a: "Código azul (3 veces), lugar, sexo y rango etario. [cite: 10]"},
+        {q: "¿Quiénes son el equipo de respuesta?", a: "Funcionarios SUR/SAPU. [cite: 10]"},
+        {q: "¿Qué hace el funcionario sin RCP tras activar el código?", a: "Permanecer junto a la persona. [cite: 10]"},
+        {q: "¿Quién es el encargado de emergencia?", a: "Dirección. [cite: 14]"},
+        {q: "¿Cómo identificar líderes de evacuación?", a: "Llevan chaleco reflectante. [cite: 14]"},
+        {q: "¿Dónde se ubican los líderes?", a: "Salidas de evacuación y escaleras. [cite: 14]"},
+        {q: "Nombre situaciones de evacuación.", a: "Incendio, Sismo, Inundación. [cite: 14]"},
+        {q: "¿Comunicación principal del encargado de emergencia?", a: "Altoparlantes. [cite: 14]"},
+        {q: "¿Comunicación alternativa del encargado de emergencia?", a: "Megáfonos. [cite: 14]"},
+        {q: "¿Comunicación principal del líder?", a: "A viva voz. [cite: 14]"},
+        {q: "¿Comunicación alternativa del líder?", a: "Megáfonos. [cite: 14]"},
+        {q: "¿Qué hacer si detecta incendio?", a: "Intervenir si sabe usar extintores, activar pulsador, llamar a encargado o ir a Dirección. [cite: 14]"},
+        {q: "¿Qué hacer durante un sismo?", a: "Mantener calma, alejarse de objetos que caen, ayudar a sillas de ruedas y esperar instrucciones. [cite: 14]"},
+        {q: "¿Qué hacer ante inundación?", a: "Llamar a encargado, no caminar cerca de agua ni cables. [cite: 14]"},
+        {q: "Nombre una zona de seguridad.", a: "Z1: Calle Ramón Freire (taxis). Z2: Calle Ramón Freire (bomberos). Z3: Av. Mocopulli (carabineros). [cite: 14]"}
+    ],
+    prof_admin: [
+        {q: "¿Formato de fichas clínicas?", a: "Electrónica y papel. [cite: 19]"},
+        {q: "¿Quiénes acceden a la ficha?", a: "Solo personal relacionado a la atención del usuario. [cite: 19]"},
+        {q: "¿Cómo se accede a las plataformas?", a: "Usuario y clave personal. [cite: 19]"},
+        {q: "¿Cómo se vinculan las fichas?", a: "A través del RUT del paciente. [cite: 19]"},
+        {q: "¿Cómo acceder a fichas de papel?", a: "Gestionar solicitud a través del encargado de SOME. [cite: 19]"},
+        {q: "¿Qué hacer en corte de luz o internet?", a: "Registrar en planilla de contingencia e ingresar a ficha electrónica en máximo 5 días hábiles. [cite: 19]"},
+        {q: "¿A quiénes entregar información de la ficha?", a: "Titular, representante, herederos, terceros con poder notarial o justicia. [cite: 19]"},
+        {q: "¿Nombre del documento de reclamo?", a: "Formulario requerimiento ciudadano. [cite: 32]"},
+        {q: "¿Canal de reclamo en horario hábil?", a: "SOME general / OIRS. [cite: 32]"},
+        {q: "¿Dónde reclamar en horario inhábil?", a: "SOME urgencia / Plataforma online. [cite: 32]"},
+        {q: "¿Qué hacer si el usuario tiene discapacidad?", a: "Un funcionario escribe lo dictado y se lo lee. [cite: 32]"},
+        {q: "¿Quién asigna folio al reclamo?", a: "Operador(a) o Encargado(a) OIRS. [cite: 32]"},
+        {q: "¿Quién traslada reclamos de otros centros?", a: "Coordinador de sector. [cite: 32]"},
+        {q: "¿Plazo máximo de envío desde otros centros?", a: "3 días hábiles. [cite: 32]"},
+        {q: "¿Plazo de respuesta al reclamo?", a: "15 días hábiles. [cite: 32]"}
+    ],
+    some: [
+        {q: "¿Dónde solicita el usuario su copia de ficha?", a: "En SOME del CESFAM vía Formulario de Solicitud de Antecedentes. "},
+        {q: "¿Se gestiona la solicitud de ficha en Postas?", a: "No. Se derivan al SOME del CESFAM. "},
+        {q: "¿Dónde retira el usuario la copia?", a: "Centralizado en SOME CESFAM. "},
+        {q: "¿Cómo solicita el profesional la ficha de papel?", a: "Anexo N° 2 al encargado de SOME. "},
+        {q: "¿Quién gestiona el traslado de ficha papel a posta?", a: "Encargado SOME vía coordinador de sector. "},
+        {q: "¿Quién traslada físicamente la ficha a la posta?", a: "Coordinador(a) de sector rural. "},
+        {q: "¿Plazo de entrega de copia a usuario?", a: "10 días hábiles. "},
+        {q: "¿Plazo de entrega de ficha papel al profesional?", a: "7 días hábiles. "},
+        {q: "¿Cuál es el orden de las fichas papel?", a: "Por RUT, orden ascendente. "},
+        {q: "¿Tiempo legal de archivo de ficha papel?", a: "15 años desde la última atención. "},
+        {q: "¿Procedimiento para instituciones externas?", a: "Dirigirse a Dirección vía correo electrónico. "}
+    ],
+    prof_clinico: [
+        {q: "¿Qué hacer si necesita acceso a ficha papel?", a: "Completar Formulario de Solicitud (Anexo N° 2) y entregar a encargado SOME. "},
+        {q: "¿Plazo para devolver la ficha de papel?", a: "3 días hábiles. "},
+        {q: "¿Tiempo legal de archivo de la ficha?", a: "15 años desde la última atención. "}
+    ]
+};
+
+let currentQuestions = [];
+let currentIndex = 0;
+
+function loadCategory() {
+    const cat = document.getElementById('cat').value;
+    if (!cat) {
+        document.getElementById('quiz-section').classList.add('hidden');
+        return;
+    }
+    
+    currentQuestions = [...db[cat]];
+    shuffle(currentQuestions);
+    currentIndex = 0;
+    
+    document.getElementById('quiz-section').classList.remove('hidden');
+    updateStats();
+    showQuestion();
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[array[j]]] = [array[j], array[i]];
+    }
+}
+
+function showQuestion() {
+    const q = currentQuestions[currentIndex];
+    document.getElementById('q-text').innerText = q.q;
+    document.getElementById('ans-text').innerHTML = q.a;
+    document.getElementById('ans-text').style.display = 'none';
+    document.getElementById('placeholder').style.display = 'block';
+    document.getElementById('next-btn').classList.add('hidden');
+    updateStats();
+}
+
+function showAnswer() {
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('ans-text').style.display = 'block';
+    document.getElementById('next-btn').classList.remove('hidden');
+}
+
+function nextQuestion() {
+    currentIndex++;
+    if (currentIndex < currentQuestions.length) {
+        showQuestion();
+    } else {
+        alert("¡Has completado todas las preguntas de esta categoría!");
+        loadCategory();
+    }
+}
+
+function updateStats() {
+    const total = currentQuestions.length;
+    document.getElementById('stats').innerText = `Pregunta ${currentIndex + 1} de ${total}`;
+}
+</script>
+</body>
+</html>
